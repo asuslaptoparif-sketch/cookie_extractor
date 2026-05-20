@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extract Cookies - Cookie Bot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --card-bg: #24243e;
+            --accent: #8e44ad;
+            --accent-hover: #9b59b6;
+            --text: #ffffff;
+            --text-muted: #a0a0b0;
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: radial-gradient(circle at top right, #2c1b47, transparent),
+                              radial-gradient(circle at bottom left, #1a1a2e, transparent);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(142, 68, 173, 0.2);
+            color: #d291ff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(142, 68, 173, 0.3);
+        }
+
+        .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 32px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            text-align: left;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .label-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .label-box i {
+            font-size: 14px;
+            width: 16px;
+        }
+
+        textarea, input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text);
+            padding: 16px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus, input:focus {
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 4px rgba(142, 68, 173, 0.1);
+        }
+
+        textarea {
+            resize: none;
+            height: 120px;
+        }
+
+        .pass-container {
+            position: relative;
+        }
+
+        .pass-container i.toggle-pass {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(142, 68, 173, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Results Table */
+        .results-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .results-table th {
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            text-align: left;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .results-table td {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
+        .status-fetching { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+        .status-success { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .status-failed { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+
+        .copy-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        /* Toast Styling */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="badge"><i class="fas fa-circle" style="font-size: 6px; vertical-align: middle;"></i> COOKIE EXTRACTION</div>
+    <h1>Extract Cookies</h1>
+    <p class="subtitle">Submit accounts for instant parallel extraction</p>
+
+    <div class="card">
+        <div class="form-group">
+            <div class="label-box"><i class="fas fa-bars"></i> Usernames</div>
+            <textarea id="usernames" placeholder="username1&#10;username2&#10;username3"></textarea>
+            <div class="help-text">One username per line</div>
+        </div>
+
+        <div class="form-group">
+            <div class="label-box"><i class="fas fa-key"></i> Common Password</div>
+            <div class="pass-container">
+                <input type="password" id="password" placeholder="Shared password for all accounts">
+                <i class="fas fa-eye toggle-pass" onclick="togglePassword()"></i>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="label-box"><i class="fas fa-shield-alt"></i> 2FA Codes</div>
+            <textarea id="twofa" placeholder="JBSWY3DPEHPK3PXP&#10;ABCDEF234567"></textarea>
+            <div class="help-text">One 2FA secret per line — must match username order</div>
+        </div>
+
+        <button class="btn" id="extractBtn" onclick="submitExtraction()">
+            <i class="fas fa-bolt"></i> Extract Cookies
+        </button>
+    </div>
+
+    <div class="results-container" id="resultsSection">
+        <div class="label-box"><i class="fas fa-list-check"></i> Live Results</div>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+                <!-- Results will appear here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+    let activeTrackers = {};
+
+    function togglePassword() {
+        const passInput = document.getElementById('password');
+        const icon = document.querySelector('.toggle-pass');
+        if (passInput.type === 'password') {
+            passInput.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            passInput.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+
+    function showToast(msg, isError = false) {
+        const t = document.getElementById('toast');
+        t.innerHTML = msg;
+        t.style.background = isError ? '#e74c3c' : '#2ecc71';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    async function submitExtraction() {
+        const usernames = document.getElementById('usernames').value.split('\n').map(s => s.trim()).filter(s => s);
+        const password = document.getElementById('password').value.trim();
+        const twofas = document.getElementById('twofa').value.split('\n').map(s => s.trim()).filter(s => s);
+        const btn = document.getElementById('extractBtn');
+        const resultsBody = document.getElementById('resultsBody');
+        const resultsSection = document.getElementById('resultsSection');
+
+        if (usernames.length === 0) return showToast('Please enter at least one username', true);
+        if (!password) return showToast('Please enter the common password', true);
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        resultsSection.style.display = 'block';
+        resultsBody.innerHTML = ''; // Clear previous
+
+        for (let i = 0; i < usernames.length; i++) {
+            const user = usernames[i];
+            const two_fa = twofas[i] || '-';
+            const rowId = 'row-' + Date.now() + '-' + i;
+
+            // Add row to table
+            resultsBody.innerHTML += `
+                <tr id="${rowId}">
+                    <td>${user}</td>
+                    <td><span class="status-badge status-pending">Pending</span></td>
+                    <td>-</td>
+                </tr>
+            `;
+
+            try {
+                const resp = await fetch('/api/extract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: user,
+                        password: password,
+                        two_fa: two_fa
+                    })
+                });
+                const d = await resp.json();
+                if (d.status === 'success') {
+                    updateRowStatus(rowId, 'success', d.cookie);
+                } else {
+                    updateRowStatus(rowId, 'failed', d.message);
+                }
+            } catch (e) {
+                updateRowStatus(rowId, 'failed', 'Connection error');
+            }
+        }
+
+        showToast(`✅ Extraction finished!`);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-bolt"></i> Extract Cookies';
+    }
+
+    function updateRowStatus(rowId, status, extra = '') {
+        const row = document.getElementById(rowId);
+        if (!row) return;
+        const statusCell = row.cells[1];
+        const actionCell = row.cells[2];
+
+        statusCell.innerHTML = `<span class="status-badge status-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+        
+        if (status === 'success') {
+            actionCell.innerHTML = `<button class="copy-btn" onclick="copyCookie('${extra}')">Copy Cookie</button>`;
+        } else if (status === 'failed') {
+            actionCell.innerHTML = `<span style="color:#e74c3c; font-size:10px;">${extra}</span>`;
+        }
+    }
+
+    // startTracking function is no longer needed for direct extraction
+    function startTracking(username, rowId) { }
+
+    function copyCookie(cookie) {
+        navigator.clipboard.writeText(cookie).then(() => {
+            showToast('✅ Cookie copied to clipboard!');
+        });
+    }
+</script>
+
+</body>
+</html>
