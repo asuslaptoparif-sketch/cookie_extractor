@@ -1,2 +1,2 @@
 [tool.vercel]
-entrypoint = "api/extract.py"
+entrypoint = "api.extract:handler"
