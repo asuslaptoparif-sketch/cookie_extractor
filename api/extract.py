@@ -68,31 +68,39 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"status": "error", "message": msg}).encode())
                 return
 
-            # Capture all cookies like 'rur' by simulating human-like activity
+            # Multi-stage aggressive cookie capture to force 'rur'
             try:
                 import time
                 import random
                 
-                # Multi-stage attempt to force 'rur' cookie
-                endpoints = [
+                # Endpoints that are highly likely to trigger 'rur' setting
+                test_urls = [
                     "https://i.instagram.com/api/v1/accounts/current_user/?edit=true",
-                    "https://www.instagram.com/accounts/edit/",
-                    f"https://www.instagram.com/{username}/"
+                    "https://www.instagram.com/api/v1/web/accounts/edit/",
+                    "https://www.instagram.com/"
                 ]
                 
-                for url in endpoints:
+                for url in test_urls:
                     if 'rur' in L.context._session.cookies.get_dict():
                         break
                     
-                    time.sleep(random.uniform(2, 3))
-                    check_headers = {
-                        "x-ig-app-id": "936619743392459",
+                    time.sleep(random.uniform(2.5, 4.5))
+                    headers = {
+                        "X-IG-App-ID": "936619743392459",
                         "User-Agent": ua,
                         "Accept": "*/*",
                         "X-Requested-With": "XMLHttpRequest",
-                        "Referer": "https://www.instagram.com/"
+                        "Referer": "https://www.instagram.com/",
+                        "X-CSRFToken": L.context._session.cookies.get_dict().get('csrftoken', '')
                     }
-                    L.context._session.get(url, headers=check_headers, timeout=12)
+                    
+                    resp = L.context._session.get(url, headers=headers, timeout=15)
+                    
+                    # Force sync if the jar missed it
+                    if 'rur' not in L.context._session.cookies.get_dict():
+                        for c in resp.cookies:
+                            if c.name.lower() == 'rur':
+                                L.context._session.cookies.set(c.name, c.value, domain=c.domain, path=c.path)
             except:
                 pass
 
@@ -114,4 +122,3 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode())
-
