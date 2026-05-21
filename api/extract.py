@@ -68,9 +68,24 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"status": "error", "message": msg}).encode())
                 return
 
-            # Health Check to capture all cookies like 'rur'
+            # Capture all cookies like 'rur' by simulating human-like activity
             try:
-                L.context._session.get("https://i.instagram.com/api/v1/accounts/current_user/?edit=true", timeout=10)
+                import time
+                import random
+                time.sleep(random.uniform(2, 4)) # Human-like delay
+                
+                check_headers = {
+                    "x-ig-app-id": "936619743392459",
+                    "User-Agent": ua,
+                    "Accept": "*/*",
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+                # Requesting a specific endpoint that always sets 'rur'
+                L.context._session.get(
+                    "https://i.instagram.com/api/v1/accounts/current_user/?edit=true", 
+                    headers=check_headers, 
+                    timeout=15
+                )
             except:
                 pass
 
