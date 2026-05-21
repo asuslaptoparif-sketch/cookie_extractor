@@ -1,9 +1,23 @@
 {
   "version": 2,
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/extract.py"
+      "src": "api/extract.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/extract.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
     }
   ]
 }

@@ -1,12 +1,17 @@
-from http.server import BaseHTTPRequestHandler
 import json
 import instaloader
 import pyotp
-import urllib.parse
+from http.server import BaseHTTPRequestHandler
 
 class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({"status": "active", "message": "Cookie Extractor API is running"}).encode())
+
     def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
+        content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
         
         try:
@@ -16,7 +21,8 @@ class handler(BaseHTTPRequestHandler):
             two_fa = body.get('two_fa', '')
             
             if not username or not password:
-                self.send_response(400)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({"status": "error", "message": "Username and Password required"}).encode())
                 return
@@ -32,6 +38,7 @@ class handler(BaseHTTPRequestHandler):
             except instaloader.TwoFactorAuthRequiredException:
                 if not two_fa or two_fa == "-":
                     self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
                     self.end_headers()
                     self.wfile.write(json.dumps({"status": "error", "message": "2FA Required"}).encode())
                     return
@@ -45,6 +52,7 @@ class handler(BaseHTTPRequestHandler):
                 else: msg = str(e)[:100]
                 
                 self.send_response(200)
+                self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({"status": "error", "message": msg}).encode())
                 return
@@ -58,11 +66,13 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"status": "success", "cookie": cookie_str}).encode())
             else:
                 self.send_response(200)
+                self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({"status": "error", "message": "SessionID not found"}).encode())
 
         except Exception as e:
-            self.send_response(500)
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode())
-PY;
+
