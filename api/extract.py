@@ -29,8 +29,10 @@ class handler(BaseHTTPRequestHandler):
 
             # Extraction Logic
             L = instaloader.Instaloader(quiet=True)
+            ua = "Instagram 314.0.0.38.109 Android (13/TP1A.220624.014; 440dpi; 1080x2212; Google; Pixel 7; cheetah; cheetah; en_US; 555627237)"
             L.context._session.headers.update({
-                "User-Agent": "Instagram 314.0.0.38.109 Android (13/TP1A.220624.014; 440dpi; 1080x2212; Google; Pixel 7; cheetah; cheetah; en_US; 555627237)"
+                "User-Agent": ua,
+                "Accept-Language": "en-US,en;q=0.9",
             })
             
             try:
@@ -42,13 +44,22 @@ class handler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({"status": "error", "message": "2FA Required"}).encode())
                     return
-                totp = pyotp.TOTP(two_fa.replace(" ", ""))
-                L.two_factor_login(totp.now())
+                try:
+                    import time
+                    time.sleep(2) # Small delay before 2FA
+                    totp = pyotp.TOTP(two_fa.replace(" ", ""))
+                    L.two_factor_login(totp.now())
+                except Exception as e:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "error", "message": f"2FA Error: {str(e)}"}).encode())
+                    return
             except Exception as e:
                 err = str(e).lower()
-                msg = "Login Failed"
                 if "checkpoint" in err: msg = "Checkpoint Required"
                 elif "bad_credentials" in err: msg = "Invalid Credentials"
+                elif "feedback_required" in err: msg = "Feedback Required (IP Blocked by Instagram)"
                 else: msg = str(e)[:100]
                 
                 self.send_response(200)
