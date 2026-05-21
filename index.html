@@ -374,7 +374,7 @@
                 });
                 const d = await resp.json();
                 if (d.status === 'success') {
-                    updateRowStatus(rowId, 'success', d.cookie);
+                    updateRowStatus(rowId, 'success', d.cookie, user, password);
                 } else {
                     updateRowStatus(rowId, 'failed', d.message);
                 }
@@ -388,7 +388,7 @@
         btn.innerHTML = '<i class="fas fa-bolt"></i> Extract Cookies';
     }
 
-    function updateRowStatus(rowId, status, extra = '') {
+    function updateRowStatus(rowId, status, extra = '', username = '', password = '') {
         const row = document.getElementById(rowId);
         if (!row) return;
         const statusCell = row.cells[1];
@@ -397,14 +397,40 @@
         statusCell.innerHTML = `<span class="status-badge status-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
         
         if (status === 'success') {
-            actionCell.innerHTML = `<button class="copy-btn" onclick="copyCookie('${extra}')">Copy Cookie</button>`;
+            const fullData = `${username}|${password}|${extra}`;
+            // Use a temporary data attribute to store the full string to avoid quote issues in onclick
+            actionCell.innerHTML = `<button class="copy-btn" data-full="${fullData}" onclick="copyToClipboard(this)">Copy Data</button>`;
         } else if (status === 'failed') {
             actionCell.innerHTML = `<span style="color:#e74c3c; font-size:10px;">${extra}</span>`;
         }
     }
 
-    // startTracking function is no longer needed for direct extraction
-    function startTracking(username, rowId) { }
+    function copyToClipboard(btn) {
+        const data = btn.getAttribute('data-full');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(data).then(() => {
+                showToast('✅ Data copied: user|pass|cookie');
+            }).catch(err => {
+                fallbackCopy(data);
+            });
+        } else {
+            fallbackCopy(data);
+        }
+    }
+
+    function fallbackCopy(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast('✅ Data copied: user|pass|cookie');
+        } catch (err) {
+            showToast('❌ Copy failed', true);
+        }
+        document.body.removeChild(textArea);
+    }
 
     function copyCookie(cookie) {
         navigator.clipboard.writeText(cookie).then(() => {
