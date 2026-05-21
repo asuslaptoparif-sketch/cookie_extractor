@@ -68,6 +68,12 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"status": "error", "message": msg}).encode())
                 return
 
+            # Health Check to capture all cookies like 'rur'
+            try:
+                L.context._session.get("https://i.instagram.com/api/v1/accounts/current_user/?edit=true", timeout=10)
+            except:
+                pass
+
             cookies = L.context._session.cookies.get_dict()
             if 'sessionid' in cookies:
                 cookie_str = "; ".join([f"{k}={v}" for k, v in cookies.items()])
