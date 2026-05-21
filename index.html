@@ -291,7 +291,12 @@
     </div>
 
     <div class="results-container" id="resultsSection">
-        <div class="label-box"><i class="fas fa-list-check"></i> Live Results</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div class="label-box" style="margin-bottom: 0;"><i class="fas fa-list-check"></i> Live Results</div>
+            <button class="copy-btn" id="copyAllBtn" onclick="copyAllData()" style="display: none; background: #27ae60;">
+                <i class="fas fa-copy"></i> Copy All Results
+            </button>
+        </div>
         <table class="results-table">
             <thead>
                 <tr>
@@ -310,7 +315,7 @@
 <div id="toast"></div>
 
 <script>
-    let activeTrackers = {};
+    let allResults = [];
 
     function togglePassword() {
         const passInput = document.getElementById('password');
@@ -347,6 +352,8 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
         resultsSection.style.display = 'block';
         resultsBody.innerHTML = ''; // Clear previous
+        allResults = []; // Reset bulk results
+        document.getElementById('copyAllBtn').style.display = 'none';
 
         for (let i = 0; i < usernames.length; i++) {
             const user = usernames[i];
@@ -386,6 +393,10 @@
         showToast(`✅ Extraction finished!`);
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-bolt"></i> Extract Cookies';
+        
+        if (allResults.length > 0) {
+            document.getElementById('copyAllBtn').style.display = 'block';
+        }
     }
 
     function updateRowStatus(rowId, status, extra = '', username = '', password = '') {
@@ -398,10 +409,26 @@
         
         if (status === 'success') {
             const fullData = `${username}|${password}|${extra}`;
+            allResults.push(fullData);
             // Use a temporary data attribute to store the full string to avoid quote issues in onclick
             actionCell.innerHTML = `<button class="copy-btn" data-full="${fullData}" onclick="copyToClipboard(this)">Copy Data</button>`;
         } else if (status === 'failed') {
             actionCell.innerHTML = `<span style="color:#e74c3c; font-size:10px;">${extra}</span>`;
+        }
+    }
+
+    function copyAllData() {
+        if (allResults.length === 0) return;
+        const text = allResults.join('\n');
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`✅ Copied ${allResults.length} accounts data!`);
+            }).catch(err => {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
         }
     }
 
