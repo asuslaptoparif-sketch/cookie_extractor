@@ -28,15 +28,24 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             # Extraction Logic
-            L = instaloader.Instaloader(quiet=True)
+            L = instaloader.Instaloader(quiet=True, max_connection_attempts=1)
+            # Reset session to ensure a clean state
+            L.context._session.cookies.clear()
+            
             ua = "Instagram 314.0.0.38.109 Android (13/TP1A.220624.014; 440dpi; 1080x2212; Google; Pixel 7; cheetah; cheetah; en_US; 555627237)"
             L.context._session.headers.update({
                 "User-Agent": ua,
                 "Accept-Language": "en-US,en;q=0.9",
+                "X-IG-App-ID": "936619743392459",
             })
             
             try:
-                L.login(username, password)
+                # Add a small random delay to avoid "Unexpected null login result"
+                import time
+                import random
+                time.sleep(random.uniform(1, 3))
+                
+                L.login(username.strip(), password.strip())
             except instaloader.TwoFactorAuthRequiredException:
                 if not two_fa or two_fa == "-":
                     self.send_response(200)
