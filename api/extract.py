@@ -81,30 +81,45 @@ class handler(BaseHTTPRequestHandler):
                 ]
                 
                 for url in test_urls:
-                    if 'rur' in L.context._session.cookies.get_dict():
+                    # Check if rur exists and has a value
+                    current_cookies = L.context._session.cookies.get_dict()
+                    if current_cookies.get('rur'):
                         break
                     
-                    time.sleep(random.uniform(2.5, 4.5))
+                    time.sleep(random.uniform(2, 4))
                     headers = {
                         "X-IG-App-ID": "936619743392459",
                         "User-Agent": ua,
                         "Accept": "*/*",
                         "X-Requested-With": "XMLHttpRequest",
                         "Referer": "https://www.instagram.com/",
-                        "X-CSRFToken": L.context._session.cookies.get_dict().get('csrftoken', '')
+                        "X-CSRFToken": current_cookies.get('csrftoken', '')
                     }
                     
-                    resp = L.context._session.get(url, headers=headers, timeout=15)
-                    
-                    # Force sync if the jar missed it
-                    if 'rur' not in L.context._session.cookies.get_dict():
-                        for c in resp.cookies:
-                            if c.name.lower() == 'rur':
-                                L.context._session.cookies.set(c.name, c.value, domain=c.domain, path=c.path)
+                    try:
+                        resp = L.context._session.get(url, headers=headers, timeout=12, allow_redirects=True)
+                        
+                        # Manually extract rur from response headers if it's there
+                        for cookie in resp.cookies:
+                            if cookie.name.lower() == 'rur' and cookie.value:
+                                L.context._session.cookies.set(cookie.name, cookie.value, domain=cookie.domain, path=cookie.path)
+                        
+                        # Extra check: sometimes it's in the 'Set-Cookie' header but not in the jar
+                        set_cookie = resp.headers.get('Set-Cookie', '')
+                        if 'rur=' in set_cookie and not L.context._session.cookies.get_dict().get('rur'):
+                            import re
+                            match = re.search(r'rur=([^;]+)', set_cookie)
+                            if match:
+                                L.context._session.cookies.set('rur', match.group(1), domain='.instagram.com', path='/')
+                    except:
+                        continue
             except:
                 pass
 
             cookies = L.context._session.cookies.get_dict()
+            # Final fallback: if rur is still missing, try to set a dummy/default one or just filter empty ones
+            cookies = {k: v for k, v in cookies.items() if v} 
+            
             if 'sessionid' in cookies:
                 cookie_str = "; ".join([f"{k}={v}" for k, v in cookies.items()])
                 self.send_response(200)
