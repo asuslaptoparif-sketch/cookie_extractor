@@ -72,20 +72,27 @@ class handler(BaseHTTPRequestHandler):
             try:
                 import time
                 import random
-                time.sleep(random.uniform(2, 4)) # Human-like delay
                 
-                check_headers = {
-                    "x-ig-app-id": "936619743392459",
-                    "User-Agent": ua,
-                    "Accept": "*/*",
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-                # Requesting a specific endpoint that always sets 'rur'
-                L.context._session.get(
-                    "https://i.instagram.com/api/v1/accounts/current_user/?edit=true", 
-                    headers=check_headers, 
-                    timeout=15
-                )
+                # Multi-stage attempt to force 'rur' cookie
+                endpoints = [
+                    "https://i.instagram.com/api/v1/accounts/current_user/?edit=true",
+                    "https://www.instagram.com/accounts/edit/",
+                    f"https://www.instagram.com/{username}/"
+                ]
+                
+                for url in endpoints:
+                    if 'rur' in L.context._session.cookies.get_dict():
+                        break
+                    
+                    time.sleep(random.uniform(2, 3))
+                    check_headers = {
+                        "x-ig-app-id": "936619743392459",
+                        "User-Agent": ua,
+                        "Accept": "*/*",
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Referer": "https://www.instagram.com/"
+                    }
+                    L.context._session.get(url, headers=check_headers, timeout=12)
             except:
                 pass
 
